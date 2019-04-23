@@ -1,45 +1,47 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-#import Tkinter as tk
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 import datetime as dt
 import os
+import mysql.connector
 
 #code for data extraction through sql
-'''
+'''conn = mysql.connector.connect(
+         user='foouser',
+         password='F88Pa%%**',
+         host='134.209.144.239',
+         database='stocksdb')
+
+cur=conn.cursor()
+print(conn)
+cur.execute("select * from stocksdb.interview")
+#cur.execute("SHOW COLUMNS FROM interview")
+print(cur.execute)'''
+
 df = pd.read_csv("stock.csv",sep=',', error_bad_lines=False, index_col=False, dtype='unicode')
-#print(df)
-#print (df.iloc[:,[2,3,4]])
-#df.sort_values(by=[2,3,4],ascending=True)
-#print(df)
 
-df.sort_values('datetime')
-#print(nf)
-'''
+nf=df.sort_values('datetime')
+print(nf)
 
-
-
-high_prices= df.iloc[:,[4]].as_matrix()
-low_prices = df.iloc[:,[5]].as_matrix()
-print("high_prices",high_prices,high_prices.shape)
-print("low_prices",low_prices)
+high_prices= nf.iloc[:,[4]].as_matrix()
+low_prices = nf.iloc[:,[5]].as_matrix()
+#print("high_prices",high_prices,high_prices.shape)
+#print("low_prices",low_prices)
 m_p = []
 for i in range(high_prices.shape[0]):
 	m_p.append((float(high_prices[i])+float(low_prices[i]))/2.0)
-	print(m_p)
-#print high_prices[i],"-----",low_prices[i],"-----",m_p
 
 mid_prices=np.array(m_p)
-
 print("mid_prices",mid_prices)
 print("shape",mid_prices.shape)
 
-train_data = mid_prices[:450000]
-test_data = mid_prices[50000:]
+train_data = mid_prices[:350000]
+test_data = mid_prices[150000:]
 print("train data", train_data)
+
 
 #scaling using min-max scalar
 scaler = MinMaxScaler()
@@ -90,7 +92,7 @@ for pred_idx in range(window_size,N):
     mse_errors.append((std_avg_predictions[-1]-train_data[pred_idx])**2)
     std_avg_x.append(date)
 
-#print('MSE error for standard averaging: %.5f'%(0.5*np.mean(mse_errors)))
+print('MSE error for standard averaging: %.5f'%(0.5*np.mean(mse_errors)))
 std=np.array(std_avg_predictions)
 #print("std_avg_predictions",len(std_avg_predictions))
 
@@ -124,7 +126,7 @@ for pred_idx in range(1,N):
     mse_errors.append((run_avg_predictions[-1]-train_data[pred_idx])**2)
     run_avg_x.append(date)
 
-#print('MSE error for EMA averaging: %.5f'%(0.5*np.mean(mse_errors)))
+print('MSE error for EMA averaging: %.5f'%(0.5*np.mean(mse_errors)))
 
 ntd=np.array(run_avg_predictions)
 #print("run_avg_predictions",ntd.shape)
@@ -133,7 +135,6 @@ ntd=np.array(run_avg_predictions)
 plt.figure(figsize = (18,9))
 plt.plot(all_mid_data,color='r',label='True')
 plt.plot(run_avg_predictions,color='orange', label='Prediction')
-#plt.xticks(range(0,df.shape[0],50),df['Date'].loc[::50],rotation=45)
 plt.xlabel('Date')
 plt.ylabel('Mid Price')
 plt.legend(fontsize=18)
@@ -193,8 +194,8 @@ for ui,(dat,lbl) in enumerate(zip(u_data,u_labels)):
     #print('\n\nUnrolled index %d'%ui)
     dat_ind = dat
     lbl_ind = lbl
-    #print('\tInputs: ',dat )
-    #print('\n\tOutput:',lbl)
+    print('\tInputs: ',dat )
+    print('\n\tOutput:',lbl)
 
 #Hyper parameters
 
@@ -325,7 +326,7 @@ print('\tAll done')
 
 # running low-short term memory
 
-epochs = 1
+epochs = 30
 valid_summary = 1 # Interval you make test predictions
 
 n_predict_once = 50 # Number of steps you continously predict for
@@ -452,9 +453,9 @@ for ep in range(epochs):
             print('\tDecreasing learning rate by 0.5')
 
       test_mse_ot.append(current_test_mse)
-      #print('\tTest MSE: %.5f'%np.mean(mse_test_loss_seq))
+      print('\tTest MSE: %.5f'%np.mean(mse_test_loss_seq))
       predictions_over_time.append(predictions_seq)
-      #print('\tFinished Predictions')
+      print('\tFinished Predictions')
 
 best_prediction_epoch = 1 # replace this with the epoch that you got the best results when running the plotting code
 
